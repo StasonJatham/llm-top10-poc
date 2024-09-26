@@ -17,6 +17,7 @@ import {
 import { useEnterSubmit } from '@/lib/hooks/use-enter-submit'
 import { nanoid } from 'nanoid'
 import { useRouter } from 'next/navigation'
+import { SendHorizontal } from 'lucide-react'
 
 export function PromptForm({
   input,
@@ -87,7 +88,7 @@ export function PromptForm({
           ref={inputRef}
           tabIndex={0}
           onKeyDown={onKeyDown}
-          placeholder="Send a message."
+          placeholder="KarlGPT Nachricht senden"
           className="min-h-[60px] w-full resize-none bg-transparent px-4 py-[1.3rem] focus-within:outline-none sm:text-sm"
           autoFocus
           spellCheck={false}
@@ -101,12 +102,17 @@ export function PromptForm({
         <div className="absolute right-0 top-[13px] sm:right-4">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button type="submit" size="icon" disabled={input === ''}>
-                <IconArrowElbow />
-                <span className="sr-only">Send message</span>
+              <Button
+                type="submit"
+                variant="outline"
+                size="icon"
+                disabled={input === ''}
+              >
+                <SendHorizontal className="h-4 w-4  text-black dark:text-white" />
+                <span className="sr-only">KarlGPT Nachricht senden</span>
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Send message</TooltipContent>
+            <TooltipContent>KarlGPT Nachricht senden</TooltipContent>
           </Tooltip>
         </div>
       </div>

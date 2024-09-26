@@ -36,24 +36,24 @@ export function ChatPanel({
 
   const exampleMessages = [
     {
-      heading: 'What are the',
-      subheading: 'trending memecoins today?',
-      message: `What are the trending memecoins today?`
+      heading: 'Wie kontaktiere ich',
+      subheading: 'die DRV Bund bei personenbezogenen Fragen?',
+      message: `Nenne mir kurz und knapp 3 Kontaktmöglichkeiten bei der DRV Bund zu personenbezogenen Fragen`
     },
     {
-      heading: 'What is the price of',
-      subheading: '$DOGE right now?',
-      message: 'What is the price of $DOGE right now?'
+      heading: 'Erkläre mir die',
+      subheading: 'drei Säulen der Altersvorsorge',
+      message: 'Erkläre mir die drei Säulen der Altersvorsorge kurz und knapp.'
     },
     {
-      heading: 'I would like to buy',
-      subheading: '42 $DOGE',
-      message: `I would like to buy 42 $DOGE`
+      heading: 'Wie ist das',
+      subheading: 'Leitbild der DRV Bund',
+      message: `Fasse mir kurz das Leitbild der DRV Bund zusammen`
     },
     {
-      heading: 'What are some',
-      subheading: `recent events about $DOGE?`,
-      message: `What are some recent events about $DOGE?`
+      heading: 'Gibt es bei',
+      subheading: `der DRV Bund ein Security Operatiosn Center?`,
+      message: `Erkläre in 2 Sätzen was ein SOC ist und ob die DRV Bund eins hat.`
     }
   ]
 

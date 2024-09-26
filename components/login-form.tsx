@@ -30,7 +30,9 @@ export default function LoginForm() {
       className="flex flex-col items-center gap-4 space-y-3"
     >
       <div className="w-full flex-1 rounded-lg border bg-white px-6 pb-4 pt-8 shadow-md  md:w-96 dark:bg-zinc-950">
-        <h1 className="mb-3 text-2xl font-bold">Please log in to continue.</h1>
+        <h1 className="mb-3 text-2xl font-bold">
+          Einloggen um weiter zu machen.
+        </h1>
         <div className="w-full">
           <div>
             <label
@@ -45,7 +47,7 @@ export default function LoginForm() {
                 id="email"
                 type="email"
                 name="email"
-                placeholder="Enter your email address"
+                placeholder="Deine email Adresse"
                 required
               />
             </div>
@@ -63,7 +65,7 @@ export default function LoginForm() {
                 id="password"
                 type="password"
                 name="password"
-                placeholder="Enter password"
+                placeholder="Dein Passwort"
                 required
                 minLength={6}
               />
@@ -77,7 +79,8 @@ export default function LoginForm() {
         href="/signup"
         className="flex flex-row gap-1 text-sm text-zinc-400"
       >
-        No account yet? <div className="font-semibold underline">Sign up</div>
+        Noch keinen Account?{' '}
+        <div className="font-semibold underline">Registrieren</div>
       </Link>
     </form>
   )
@@ -91,7 +94,7 @@ function LoginButton() {
       className="my-4 flex h-10 w-full flex-row items-center justify-center rounded-md bg-zinc-900 p-2 text-sm font-semibold text-zinc-100 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
       aria-disabled={pending}
     >
-      {pending ? <IconSpinner /> : 'Log in'}
+      {pending ? <IconSpinner /> : 'Einloggen'}
     </button>
   )
 }

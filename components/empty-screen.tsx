@@ -9,28 +9,22 @@ export function EmptyScreen() {
     <div className="mx-auto max-w-2xl px-4">
       <div className="flex flex-col gap-2 rounded-lg border bg-background p-8">
         <h1 className="text-lg font-semibold">
-          Welcome to Next.js AI Chatbot!
+          Prompt Piraterie: Auf Kaperfahrt im LLM-Ozean
         </h1>
         <p className="leading-normal text-muted-foreground">
-          This is an open source AI chatbot app template built with{' '}
-          <ExternalLink href="https://nextjs.org">Next.js</ExternalLink>, the{' '}
-          <ExternalLink href="https://sdk.vercel.ai">
-            Vercel AI SDK
+          Dies ist eine Demo-Umgebung zur Demonstration der{' '}
+          <ExternalLink href="https://genai.owasp.org/llm-top-10/">
+            OWASP LLM Top 10
           </ExternalLink>
-          , and{' '}
-          <ExternalLink href="https://vercel.com/storage/kv">
-            Vercel KV
-          </ExternalLink>
-          .
+          . Erkunde, wie die Risiken von LLMs in verschiedenen Szenarien
+          aufgezeigt werden.
         </p>
         <p className="leading-normal text-muted-foreground">
-          It uses{' '}
-          <ExternalLink href="https://vercel.com/blog/ai-sdk-3-generative-ui">
-            React Server Components
-          </ExternalLink>{' '}
-          to combine text with generative UI as output of the LLM. The UI state
-          is synced through the SDK so the model is aware of your interactions
-          as they happen.
+          Weitere Informationen findest du{' '}
+          <ExternalLink href="https://doc.karlcom.de/s/zdKTyJ405">
+            hier in meinem Wiki
+          </ExternalLink>
+          .
         </p>
       </div>
     </div>

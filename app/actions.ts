@@ -1,169 +1,170 @@
 'use server'
 
+import Database from 'better-sqlite3'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { kv } from '@vercel/kv'
-
 import { auth } from '@/auth'
 import { type Chat } from '@/lib/types'
 
+const db = new Database('./local.db', { verbose: console.log })
+
+// Create tables if they do not exist
+db.exec(`
+  CREATE TABLE IF NOT EXISTS users (
+    id TEXT PRIMARY KEY,
+    email TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    salt TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS chats (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    content TEXT NOT NULL,
+    share_path TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  );
+`)
+
+// Function to get all chats for a user
 export async function getChats(userId?: string | null) {
   const session = await auth()
 
-  if (!userId) {
+  if (!userId || !session?.user) {
     return []
   }
 
-  if (userId !== session?.user?.id) {
-    return {
-      error: 'Unauthorized'
-    }
+  if (userId !== session.user.id) {
+    return { error: 'Unauthorized' }
   }
 
-  try {
-    const pipeline = kv.pipeline()
-    const chats: string[] = await kv.zrange(`user:chat:${userId}`, 0, -1, {
-      rev: true
-    })
+  const stmt = db.prepare(
+    'SELECT * FROM chats WHERE user_id = ? ORDER BY created_at DESC'
+  )
+  const chats = stmt.all(userId) as Chat[]
 
-    for (const chat of chats) {
-      pipeline.hgetall(chat)
-    }
-
-    const results = await pipeline.exec()
-
-    return results as Chat[]
-  } catch (error) {
-    return []
-  }
+  return chats
 }
 
+// Function to get a specific chat
 export async function getChat(id: string, userId: string) {
   const session = await auth()
 
-  if (userId !== session?.user?.id) {
-    return {
-      error: 'Unauthorized'
-    }
+  if (!session?.user || userId !== session.user.id) {
+    return { error: 'Unauthorized' }
   }
 
-  const chat = await kv.hgetall<Chat>(`chat:${id}`)
+  const stmt = db.prepare('SELECT * FROM chats WHERE id = ? AND user_id = ?')
+  const chat = stmt.get(id, userId) as Chat | undefined
 
-  if (!chat || (userId && chat.userId !== userId)) {
-    return null
-  }
-
-  return chat
+  return chat || null
 }
 
+// Function to remove a chat
 export async function removeChat({ id, path }: { id: string; path: string }) {
   const session = await auth()
 
-  if (!session) {
-    return {
-      error: 'Unauthorized'
-    }
+  if (!session?.user) {
+    return { error: 'Unauthorized' }
   }
 
-  // Convert uid to string for consistent comparison with session.user.id
-  const uid = String(await kv.hget(`chat:${id}`, 'userId'))
+  const uidStmt = db.prepare('SELECT user_id FROM chats WHERE id = ?')
+  const chat = uidStmt.get(id) as { user_id: string } | undefined
 
-  if (uid !== session?.user?.id) {
-    return {
-      error: 'Unauthorized'
-    }
+  if (!chat || chat.user_id !== session.user.id) {
+    return { error: 'Unauthorized' }
   }
 
-  await kv.del(`chat:${id}`)
-  await kv.zrem(`user:chat:${session.user.id}`, `chat:${id}`)
+  const deleteStmt = db.prepare('DELETE FROM chats WHERE id = ?')
+  deleteStmt.run(id)
 
   revalidatePath('/')
   return revalidatePath(path)
 }
 
+// Function to clear all chats for a user
 export async function clearChats() {
   const session = await auth()
 
   if (!session?.user?.id) {
-    return {
-      error: 'Unauthorized'
-    }
+    return { error: 'Unauthorized' }
   }
 
-  const chats: string[] = await kv.zrange(`user:chat:${session.user.id}`, 0, -1)
-  if (!chats.length) {
-    return redirect('/')
-  }
-  const pipeline = kv.pipeline()
-
-  for (const chat of chats) {
-    pipeline.del(chat)
-    pipeline.zrem(`user:chat:${session.user.id}`, chat)
-  }
-
-  await pipeline.exec()
+  const deleteStmt = db.prepare('DELETE FROM chats WHERE user_id = ?')
+  deleteStmt.run(session.user.id)
 
   revalidatePath('/')
   return redirect('/')
 }
 
+// Function to get a shared chat
 export async function getSharedChat(id: string) {
-  const chat = await kv.hgetall<Chat>(`chat:${id}`)
+  const stmt = db.prepare('SELECT * FROM chats WHERE id = ?')
+  const chat = stmt.get(id) as Chat | undefined
 
-  if (!chat || !chat.sharePath) {
+  if (!chat || !chat.share_path) {
     return null
   }
 
   return chat
 }
 
+// Function to share a chat
 export async function shareChat(id: string) {
   const session = await auth()
 
   if (!session?.user?.id) {
-    return {
-      error: 'Unauthorized'
-    }
+    return { error: 'Unauthorized' }
   }
 
-  const chat = await kv.hgetall<Chat>(`chat:${id}`)
+  const stmt = db.prepare('SELECT * FROM chats WHERE id = ? AND user_id = ?')
+  const chat = stmt.get(id, session.user.id) as Chat | undefined
 
-  if (!chat || chat.userId !== session.user.id) {
-    return {
-      error: 'Something went wrong'
-    }
+  if (!chat) {
+    return { error: 'Something went wrong' }
   }
 
-  const payload = {
-    ...chat,
-    sharePath: `/share/${chat.id}`
-  }
+  const sharePath = `/share/${chat.id}`
+  const updateStmt = db.prepare('UPDATE chats SET share_path = ? WHERE id = ?')
+  updateStmt.run(sharePath, chat.id)
 
-  await kv.hmset(`chat:${chat.id}`, payload)
-
-  return payload
+  return { ...chat, sharePath }
 }
 
+// Function to save or update a chat
 export async function saveChat(chat: Chat) {
   const session = await auth()
 
-  if (session && session.user) {
-    const pipeline = kv.pipeline()
-    pipeline.hmset(`chat:${chat.id}`, chat)
-    pipeline.zadd(`user:chat:${chat.userId}`, {
-      score: Date.now(),
-      member: `chat:${chat.id}`
-    })
-    await pipeline.exec()
+  if (session?.user) {
+    const insertOrUpdateStmt = db.prepare(`
+      INSERT INTO chats (id, user_id, content, share_path, created_at)
+      VALUES (?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET 
+        content = excluded.content,
+        share_path = excluded.share_path,
+        created_at = excluded.created_at
+    `)
+
+    insertOrUpdateStmt.run(
+      chat.id,
+      chat.userId,
+      chat.content,
+      chat.sharePath || null,
+      new Date().toISOString()
+    )
   } else {
     return
   }
 }
 
+// Function to refresh the page or history
 export async function refreshHistory(path: string) {
   redirect(path)
 }
 
+// Function to check for missing environment keys
 export async function getMissingKeys() {
   const keysRequired = ['OPENAI_API_KEY']
   return keysRequired
