@@ -16,7 +16,7 @@ import {
 import { useEnterSubmit } from '@/lib/hooks/use-enter-submit'
 import { nanoid } from 'nanoid'
 import { useRouter } from 'next/navigation'
-import { SendHorizontal, SquarePen } from 'lucide-react'
+import { SendHorizontal } from 'lucide-react'
 
 export function PromptForm({
   input,
@@ -52,6 +52,10 @@ export function PromptForm({
         setInput('')
         if (!value) return
 
+        // Retrieve the selected OWASP value from localStorage
+        const selectedOwasp = localStorage.getItem('selectedOWASP') || 'default'
+        const selectedMode = localStorage.getItem('secureSystem') || 'false'
+
         // Optimistically add user message UI
         setMessages(currentMessages => [
           ...currentMessages,
@@ -61,8 +65,12 @@ export function PromptForm({
           }
         ])
 
-        // Submit and get response message
-        const responseMessage = await submitUserMessage(value)
+        // Submit and get response message, passing the OWASP value as the second parameter
+        const responseMessage = await submitUserMessage(
+          value,
+          selectedOwasp,
+          selectedMode
+        )
         setMessages(currentMessages => [...currentMessages, responseMessage])
       }}
     >

@@ -12,7 +12,8 @@ import { ChatHistory } from './chat-history'
 import { Session } from '@/lib/types'
 import { House, SquarePen } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
-import { useSession } from 'next-auth/react'
+import SelectOWASP from './owasp'
+import { SecureSystem } from './secure-system'
 
 async function UserOrLogin() {
   const session = (await auth()) as Session
@@ -34,7 +35,9 @@ async function UserOrLogin() {
       <div className="flex items-center">
         <IconSeparator className="size-6 text-muted-foreground/50" />
         {session?.user ? (
-          <UserMenu user={session.user} />
+          <div className="flex">
+            <UserMenu user={session.user} />
+          </div>
         ) : (
           <Button variant="link" asChild className="-ml-2">
             <Link href="/login">Login</Link>
@@ -53,6 +56,9 @@ export async function Header() {
       <div className="flex items-center">
         <React.Suspense fallback={<div className="flex-1 overflow-auto" />}>
           <UserOrLogin />
+          <div className="pl-2">
+            <SelectOWASP />
+          </div>
         </React.Suspense>
       </div>
       <div className="flex items-center justify-end space-x-2">
@@ -67,7 +73,8 @@ export async function Header() {
             <span className="hidden ml-2 md:flex">GitHub</span>
           </a>
         ) : (
-          <div>
+          <div className="flex items-center space-x-4">
+            <SecureSystem />
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link href="/new">
