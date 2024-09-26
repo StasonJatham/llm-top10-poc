@@ -68,9 +68,10 @@ export enum ResultCode {
   UserAlreadyExists = 'USER_ALREADY_EXISTS',
   UnknownError = 'UNKNOWN_ERROR',
   UserCreated = 'USER_CREATED',
-  UserLoggedIn = 'USER_LOGGED_IN'
+  UserLoggedIn = 'USER_LOGGED_IN',
+  UserActivated = 'USER_ACTIVATED', // Add this entry for successful activation
+  InvalidActivationToken = 'INVALID_ACTIVATION_TOKEN' // Add this entry for invalid activation token
 }
-
 export const getMessageFromCode = (resultCode: string) => {
   switch (resultCode) {
     case ResultCode.InvalidCredentials:

@@ -15,6 +15,8 @@ db.exec(`
     email TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
     salt TEXT NOT NULL,
+    is_active INTEGER DEFAULT 0,
+    activation_token TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 

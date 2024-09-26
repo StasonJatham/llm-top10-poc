@@ -10,7 +10,9 @@ import { SidebarMobile } from './sidebar-mobile'
 import { SidebarToggle } from './sidebar-toggle'
 import { ChatHistory } from './chat-history'
 import { Session } from '@/lib/types'
-import { House } from 'lucide-react'
+import { House, SquarePen } from 'lucide-react'
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
+import { useSession } from 'next-auth/react'
 
 async function UserOrLogin() {
   const session = (await auth()) as Session
@@ -43,7 +45,9 @@ async function UserOrLogin() {
   )
 }
 
-export function Header() {
+export async function Header() {
+  const session = (await auth()) as Session
+
   return (
     <header className="sticky top-0 z-50 flex items-center justify-between w-full h-16 px-4 border-b shrink-0 bg-gradient-to-b from-background/10 via-background/50 to-background/80 backdrop-blur-xl">
       <div className="flex items-center">
@@ -52,15 +56,38 @@ export function Header() {
         </React.Suspense>
       </div>
       <div className="flex items-center justify-end space-x-2">
-        <a
-          target="_blank"
-          href="https://github.com/StasonJatham/llm-top10-poc"
-          rel="noopener noreferrer"
-          className={cn(buttonVariants({ variant: 'outline' }))}
-        >
-          <IconGitHub />
-          <span className="hidden ml-2 md:flex">GitHub</span>
-        </a>
+        {!session?.user ? (
+          <a
+            target="_blank"
+            href="https://github.com/StasonJatham/llm-top10-poc"
+            rel="noopener noreferrer"
+            className={cn(buttonVariants({ variant: 'outline' }))}
+          >
+            <IconGitHub />
+            <span className="hidden ml-2 md:flex">GitHub</span>
+          </a>
+        ) : (
+          <div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link href="/new">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="size-8  bg-background p-0 sm:left-4"
+                  >
+                    <SquarePen
+                      strokeWidth={1}
+                      className="h-4 w-4  text-black dark:text-white"
+                    />
+                    <span className="sr-only">New Chat</span>
+                  </Button>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent>New Chat</TooltipContent>
+            </Tooltip>
+          </div>
+        )}
       </div>
     </header>
   )
