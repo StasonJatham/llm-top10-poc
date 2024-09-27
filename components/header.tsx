@@ -37,6 +37,9 @@ async function UserOrLogin() {
         {session?.user ? (
           <div className="flex">
             <UserMenu user={session.user} />
+            <div className="pl-2">
+              <SelectOWASP />
+            </div>
           </div>
         ) : (
           <Button variant="link" asChild className="-ml-2">
@@ -56,9 +59,6 @@ export async function Header() {
       <div className="flex items-center">
         <React.Suspense fallback={<div className="flex-1 overflow-auto" />}>
           <UserOrLogin />
-          <div className="pl-2">
-            <SelectOWASP />
-          </div>
         </React.Suspense>
       </div>
       <div className="flex items-center justify-end space-x-2">

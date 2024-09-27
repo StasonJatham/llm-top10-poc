@@ -4,7 +4,7 @@ import Database from 'better-sqlite3'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { auth } from '@/auth'
-import { type Chat } from '@/lib/types'
+import { Message, type Chat } from '@/lib/types'
 
 const db = new Database('./local.db', { verbose: console.log })
 
@@ -22,13 +22,20 @@ db.exec(`
 
   CREATE TABLE IF NOT EXISTS chats (
     id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
     user_id TEXT NOT NULL,
-    content TEXT NOT NULL,
+    messages TEXT NOT NULL,
     share_path TEXT,
+    topic TEXT,
+    mode TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   );
 `)
+
+export const validateMessages = (messages: Message[]) => {
+  return messages.filter(message => message.role && message.content)
+}
 
 // Function to get all chats for a user
 export async function getChats(userId?: string | null) {
@@ -60,7 +67,6 @@ export async function getChat(id: string, userId: string) {
 
   const stmt = db.prepare('SELECT * FROM chats WHERE id = ? AND user_id = ?')
   const chat = stmt.get(id, userId) as Chat | undefined
-
   return chat || null
 }
 
@@ -140,21 +146,26 @@ export async function saveChat(chat: Chat) {
   const session = await auth()
 
   if (session?.user) {
+    const validatedMessages = validateMessages(chat.messages)
     const insertOrUpdateStmt = db.prepare(`
-      INSERT INTO chats (id, user_id, content, share_path, created_at)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO chats (id, user_id, title, messages, share_path, created_at, topic, mode)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET 
-        content = excluded.content,
+        title = excluded.title,
+        messages = excluded.messages,
         share_path = excluded.share_path,
-        created_at = excluded.created_at
+        created_at = excluded.created_at,
+        topic = excluded.topic,
+        mode = excluded.mode
     `)
 
     insertOrUpdateStmt.run(
       chat.id,
       chat.userId,
-      chat.content,
-      chat.sharePath || null,
-      new Date().toISOString()
+      chat.title, // Make sure to pass the title
+      JSON.stringify(validatedMessages),
+      chat.topic,
+      chat.mode
     )
   } else {
     return
@@ -169,7 +180,14 @@ export async function refreshHistory(path: string) {
 // Function to check for missing environment keys
 export async function getMissingKeys() {
   const keysRequired = ['OPENAI_API_KEY']
+
   return keysRequired
-    .map(key => (process.env[key] ? '' : key))
+    .map(key => {
+      if (process.env[key]) return ''
+      if (typeof window !== 'undefined' && sessionStorage.getItem(key)) {
+        return ''
+      }
+      return key
+    })
     .filter(key => key !== '')
 }

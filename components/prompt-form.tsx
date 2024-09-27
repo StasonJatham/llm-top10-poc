@@ -2,9 +2,7 @@
 
 import * as React from 'react'
 import Textarea from 'react-textarea-autosize'
-
 import { useActions, useUIState } from 'ai/rsc'
-
 import { UserMessage } from './stocks/message'
 import { type AI } from '@/lib/chat/actions'
 import { Button } from '@/components/ui/button'
@@ -31,6 +29,20 @@ export function PromptForm({
   const { submitUserMessage } = useActions()
   const [_, setMessages] = useUIState<typeof AI>()
 
+  const [selectedOwasp, setSelectedOwasp] = React.useState('default')
+  const [selectedMode, setSelectedMode] = React.useState('false')
+  const [openaiKey, setOpenaiKey] = React.useState('')
+
+  React.useEffect(() => {
+    const storedOwasp = localStorage.getItem('selectedOWASP') || 'default'
+    const storedMode = localStorage.getItem('secureSystem') || 'false'
+    const storedApiKey = sessionStorage.getItem('OPENAI_API_KEY') || 'none'
+
+    setSelectedOwasp(storedOwasp)
+    setSelectedMode(storedMode)
+    setOpenaiKey(storedApiKey)
+  }, [])
+
   React.useEffect(() => {
     if (inputRef.current) {
       inputRef.current.focus()
@@ -43,7 +55,6 @@ export function PromptForm({
       onSubmit={async (e: any) => {
         e.preventDefault()
 
-        // Blur focus on mobile
         if (window.innerWidth < 600) {
           e.target['message']?.blur()
         }
@@ -52,11 +63,6 @@ export function PromptForm({
         setInput('')
         if (!value) return
 
-        // Retrieve the selected OWASP value from localStorage
-        const selectedOwasp = localStorage.getItem('selectedOWASP') || 'default'
-        const selectedMode = localStorage.getItem('secureSystem') || 'false'
-
-        // Optimistically add user message UI
         setMessages(currentMessages => [
           ...currentMessages,
           {
@@ -65,16 +71,19 @@ export function PromptForm({
           }
         ])
 
-        // Submit and get response message, passing the OWASP value as the second parameter
-        const responseMessage = await submitUserMessage(
-          value,
-          selectedOwasp,
-          selectedMode
-        )
+        const data = {
+          content: value,
+          topic: selectedOwasp,
+          mode: selectedMode,
+          openaiKey: openaiKey
+        }
+
+        console.log(data)
+        const responseMessage = await submitUserMessage(data)
         setMessages(currentMessages => [...currentMessages, responseMessage])
       }}
     >
-      <div className="relative flex max-h-60 w-full focus-within:border-blue-600  grow flex-col overflow-hidden bg-background px-2 sm:rounded-md sm:border">
+      <div className="relative flex max-h-60 w-full focus-within:border-blue-600 grow flex-col overflow-hidden bg-background px-2 sm:rounded-md sm:border">
         <Textarea
           ref={inputRef}
           tabIndex={0}

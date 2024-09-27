@@ -4,6 +4,7 @@ import { SidebarItems } from '@/components/sidebar-items'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { redirect } from 'next/navigation'
 import { cache } from 'react'
+import { OpenAIPromptSettings } from './openai-key'
 
 interface SidebarListProps {
   userId?: string
@@ -35,6 +36,8 @@ export async function SidebarList({ userId }: SidebarListProps) {
         </div>
         <div className="flex items-center justify-between p-4">
           <ThemeToggle />
+          <OpenAIPromptSettings />
+
           <ClearHistory clearChats={clearChats} isEnabled={chats?.length > 0} />
         </div>
       </div>

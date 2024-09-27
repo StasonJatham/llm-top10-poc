@@ -51,8 +51,10 @@ export function SecureSystem() {
   return (
     <div className="pl-4">
       <Tooltip>
-        <TooltipTrigger>
-          <Switch checked={isSecure} onCheckedChange={handleSwitchChange} />
+        <TooltipTrigger asChild>
+          <div>
+            <Switch checked={isSecure} onCheckedChange={handleSwitchChange} />
+          </div>
         </TooltipTrigger>
         <TooltipContent>
           {isSecure ? 'Sicherer Modus' : 'Unsicherer Modus'}

@@ -8,7 +8,6 @@ import {
   streamUI,
   createStreamableValue
 } from 'ai/rsc'
-import { openai } from '@ai-sdk/openai'
 
 import {
   spinner,
@@ -23,10 +22,30 @@ import { saveChat } from '@/app/actions'
 import { SpinnerMessage, UserMessage } from '@/components/stocks/message'
 import { Chat, Message } from '@/lib/types'
 import { auth } from '@/auth'
+import { createOpenAI } from '@ai-sdk/openai'
 
-async function submitUserMessage(content: string, topic: string, mode: string) {
+interface SubmitUserMessageParams {
+  content: string // The user's message content
+  topic: string // The selected OWASP topic
+  mode: string // The secure or insecure mode
+  apiKey?: string // The optional OpenAI API key
+}
+
+async function submitUserMessage(data: SubmitUserMessageParams) {
   'use server'
 
+  const { content, topic, mode, apiKey } = data
+
+  const openaiKey = apiKey || process.env.OPENAI_API_KEY
+
+  if (!openaiKey) {
+    throw new Error('API key is missing. Please provide an OpenAI API key.')
+  }
+
+  const openai = createOpenAI({
+    compatibility: 'strict',
+    apiKey
+  })
   const aiState = getMutableAIState<typeof AI>()
 
   aiState.update({
@@ -36,7 +55,7 @@ async function submitUserMessage(content: string, topic: string, mode: string) {
       {
         id: nanoid(),
         role: 'user',
-        content
+        content: content.trim()
       }
     ]
   })
@@ -64,7 +83,8 @@ async function submitUserMessage(content: string, topic: string, mode: string) {
     llm07_insecure: ``,
     llm08_insecure: ``,
     llm09_insecure: ``,
-    llm10_insecure: ``
+    llm10_insecure: ``,
+    default: `Help me figure out stuff.`
   }
 
   const selectedSystemPrompt =
@@ -153,10 +173,10 @@ export const AI = createAI<AIState, UIState>({
     if (!done) return
 
     const session = await auth()
+
     if (!session || !session.user) return
 
     const { chatId, messages } = state
-
     const createdAt = new Date()
     const userId = session.user.id as string
     const path = `/chat/${chatId}`
@@ -178,7 +198,12 @@ export const AI = createAI<AIState, UIState>({
 })
 
 export const getUIStateFromAIState = (aiState: Chat) => {
-  return aiState.messages
+  const messages =
+    typeof aiState.messages === 'string'
+      ? JSON.parse(aiState.messages)
+      : aiState.messages
+
+  return messages
     .filter(message => message.role !== 'system')
     .map((message, index) => ({
       id: `${aiState.chatId}-${index}`,

@@ -48,7 +48,11 @@ export function Chat({ id, className, session, missingKeys }: ChatProps) {
   })
 
   useEffect(() => {
-    missingKeys.map(key => {
+    missingKeys.forEach(key => {
+      if (typeof window !== 'undefined' && sessionStorage.getItem(key)) {
+        return
+      }
+
       toast.error(`Missing ${key} environment variable!`)
     })
   }, [missingKeys])
